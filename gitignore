@@ -1,0 +1,23 @@
+# LaTeX
+*.aux
+*.log
+*.toc
+*.lof
+*.lot
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# ANSYS Fluent
+*.cas.h5
+*.dat.h5
+*.trn
+*.msh
+*.msh.h5
+
+# Sistema
+.DS_Store
+Thumbs.db
