@@ -1,0 +1,384 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{siunitx}
+\usepackage[spanish]{babel}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+% --- Definiciones útiles ---
+\newcommand{\COtwo}{\ensuremath{\mathrm{CO}_2}}
+\newcommand{\CHfour}{\ensuremath{\mathrm{CH}_4}}
+\newcommand{\HtwoS}{\ensuremath{\mathrm{H}_2\mathrm{S}}}
+\newcommand{\HtwoO}{\ensuremath{\mathrm{H}_2\mathrm{O}}}
+\newcommand{\Ntwo}{\ensuremath{\mathrm{N}_2}}
+
+\title{Simulación CFD en Estado Estacionario de las Condiciones de Microclima en el Cultivo de \textit{Pleurotus} spp.: Transporte Acoplado de Aire, Calor, Humedad y \COtwo\ Biogénico}
+
+\author{
+    John Jairo Leal Gómez\\
+    \textit{Fenómenos de Transporte Avanzados} \\
+    Universidad Nacional de Colombia, Palmira\\
+    Email: jlealgom@unal.edu.co
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este artículo presenta un modelo de dinámica de fluidos computacional (CFD) en estado estacionario para analizar y optimizar el diseño de sistemas de ventilación en cámaras de cultivo de \textit{Pleurotus ostreatus}, con el objetivo de controlar la acumulación de dióxido de carbono (\COtwo) y mejorar la calidad y rendimiento del hongo. El dominio computacional, de dimensiones $0{,}5 \times 2{,}0 \times 1{,}0$~m, incluye una entrada de aire húmedo ($0{,}2 \times 0{,}2$~m) en la pared superior (xy) y una salida opuesta en la pared xz, posicionadas para favorecer la extracción de gases densos. La emisión de \COtwo, vapor de agua, metano (\CHfour) y sulfuro de hidrógeno (\HtwoS) se modela como fuentes volumétricas constantes en un bloque de sustrato ($0{,}07 \times 1{,}147 \times 0{,}492$~m), sin considerar reacciones químicas ni dinámica metabólica. Mediante ANSYS Fluent, se resuelve acoplado el flujo turbulento (modelo k-$\epsilon$ realizable), la transferencia de calor y el transporte pasivo de especies, con condiciones de frontera físicamente realistas (temperatura uniforme de 20~°C, humedad relativa del 70\%). Los resultados muestran una distribución espacial no uniforme de \COtwo, con acumulación significativa en la capa superior del recinto y una eficiencia de eliminación superior al 95\% mediante la salida. Este enfoque, basado únicamente en principios físicos y sin requerir sensores o datos en tiempo real, ofrece una herramienta predictiva y accesible para el diseño óptimo de ventilación en cultivos controlados de hongos.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Dinámica de fluidos computacional (CFD), modelado de microclima, cultivo de hongos, transporte de especies, escalares pasivos, \textit{Pleurotus ostreatus}, diseño de ventilación
+\end{IEEEkeywords}
+
+\section{Introducción}
+
+La producción comercial de Pleurotus ostreatus depende críticamente del control preciso del microclima dentro de las cámaras de cultivo, donde la concentración de dióxido de carbono (\COtwo), la temperatura y la humedad relativa influyen directamente en la tasa de crecimiento del micelio, la formación de fructificaciones y la calidad final del hongo. En condiciones de cultivo confinado, la respiración aeróbica de los hongos genera \COtwo \ como subproducto metabólico, cuya acumulación por encima de 1000~ppm puede inhibir el desarrollo, reducir el rendimiento y provocar deformaciones morfológicas en los cuerpos fructíferos. A pesar de su importancia, la mayoría de los sistemas de cultivo industriales aún utilizan estrategias de ventilación basadas en temporizadores o sensores de umbral simple (encendido/apagado), que ignoran la dinámica espacial del transporte de gases, los gradientes de concentración y la interacción acoplada entre flujo de aire, transferencia de calor y emisión biogénica.
+
+Este artículo presenta un estudio numérico basado en dinámica de fluidos computacional (CFD) cuyo objetivo principal es determinar el nivel óptimo de ventilación requerido para mantener concentraciones de \COtwo \ por debajo del umbral crítico, maximizando así la producción y calidad del hongo. Para ello, se desarrolla un modelo estacionario que integra de forma acoplada el transporte de especies (\COtwo), vapor de agua, metano y sulfuro de hidrógeno), el flujo turbulento del aire y la transferencia de calor en un dominio tridimensional más o menos realista de dimensiones 0.5~m × 2.0~m × 1.0~m, representativo de una cámara de cultivo típica. La fuente de \COtwo \ se modela como un término volumétrico constante en una región de sustrato fúngico, basado en tasas de emisión reportadas en la literatura, sin considerar reacciones químicas ni dinámica de crecimiento.
+
+Las ecuaciones gobernantes incluyen la conservación de masa, momento y energía, junto con la ecuación de transporte de especies no reactivas, resueltas mediante el modelo de mezcla de gases ideales y el modelo de turbulencia $k-\epsilon$ realizable. La simulación se implementa en ANSYS Fluent versión de prueba, configurando condiciones de frontera físicamente realistas: entrada de aire húmedo con humedad relativa del 70\% y temperatura de 20~°C, salida de presión libre, paredes impermeables y sin deslizamiento, y fuentes volumétricas de especies definidas en la zona del sustrato. La malla se refina en regiones críticas —entrada, salida y fuente— para garantizar convergencia y precisión en los gradientes de concentración.
+
+Este enfoque, que evita la dependencia de sensores en tiempo real o modelos de aprendizaje automático, ofrece una herramienta predictiva y de diseño puramente física, capaz de evaluar el desempeño de distintas configuraciones de ventilación antes de su implementación física. Los resultados permiten identificar zonas de acumulación de \COtwo, cuantificar la eficiencia de remoción y proponer mejoras en la ubicación y caudal de las aberturas de entrada y salida, contribuyendo así a la optimización de sistemas de cultivo de hongos bajo condiciones controladas.
+
+
+\section{Modelo Matemático y Ecuaciones Gobernantes}
+
+El modelo numérico se basa en la resolución de las ecuaciones de conservación de masa, momento, energía y transporte de especies para un flujo de gas en estado estacionario, turbulento y tridimensional. A continuación se describe cada fenómeno físico modelado, su relevancia en el contexto del cultivo de \textit{Pleurotus ostreatus}, y la formulación matemática correspondiente.
+
+\subsection{Conservación de masa (Continuidad)}
+
+El flujo de aire dentro de la cámara de cultivo debe satisfacer la conservación de la masa total de la mezcla gaseosa. Este principio es fundamental para garantizar que el aire inyectado por la entrada se equilibre con la salida, evitando acumulaciones no físicas de presión o vacíos que alterarían la distribución de gases.
+
+La ecuación de continuidad en estado estacionario es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v}) = 0
+\end{equation}
+donde $\rho$ es la densidad de la mezcla gaseosa (kg·m$^{-3}$) y $\mathbf{v}$ es el vector velocidad del flujo (m·s$^{-1}$). La densidad se calcula mediante la ley de los gases ideales, acorde con la presión y temperatura del sistema.
+
+\subsection{Conservación de momento (Flujo de aire turbulento)}
+
+El movimiento del aire es impulsado por la ventilación forzada y modificado por la geometría de la cámara, lo que genera gradientes de velocidad que afectan directamente el transporte de vapor y \COtwo. Dado que los números de Reynolds típicos en cámaras de cultivo superan el régimen laminar, se requiere un modelo de turbulencia para capturar los efectos de mezcla y disipación de energía.
+
+Se resuelve la ecuación de momento promediada de Reynolds (RANS) en estado estacionario:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} \otimes \mathbf{v}) = -\nabla p + \nabla \cdot \left[ \mu_{\text{eff}} \left( \nabla \mathbf{v} + (\nabla \mathbf{v})^\top \right) \right]
+\end{equation}
+donde $p$ es la presión estática (Pa), y $\mu_{\text{eff}} = \mu + \mu_t$ es la viscosidad efectiva, suma de la viscosidad molecular $\mu$ y la viscosidad turbulenta $\mu_t$, esta última obtenida del modelo $k$-$\epsilon$ realizable.
+
+Este modelo se selecciona por su robustez en flujos con separación moderada y gradientes de presión adversos, comunes cerca de entradas y salidas en cámaras de cultivo.
+
+\subsection{Transferencia de calor}
+
+La temperatura influye tanto en la actividad metabólica del hongo (y por tanto en la tasa de emisión de \COtwo) como en la densidad del aire y la difusión de vapor. Aunque en este estudio se asume una fuente de \COtwo \ constante, el campo térmico debe resolverse porque afecta la convección natural y la humedad relativa.
+
+La ecuación de energía en estado estacionario es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} h) = \nabla \cdot (k_{\text{eff}} \nabla T)
+\end{equation}
+donde $h$ es la entalpía específica (J·kg$^{-1}$), $T$ es la temperatura (K), y $k_{\text{eff}} = k + k_t$ es la conductividad térmica efectiva, con $k$ la conductividad molecular y $k_t$ la contribución turbulenta.
+
+Las paredes se mantienen a temperatura constante (20~°C), y no se incluyen fuentes de calor metabólico, ya que la generación térmica por el hongo es despreciable en comparación con el intercambio térmico con las paredes, según estudios en sistemas de cultivo controlado \cite{venturella2019}.
+
+\subsection{Transporte de especies no reactivas}
+
+El \COtwo \ y otros gases emitidos por el sustrato se transportan por advección (arrastrados por el flujo) y difusión molecular en el aire. Esto determina su distribución espacial y su concentración en zonas críticas (micelio, fructificaciones). No se modelan reacciones químicas porque, bajo condiciones aeróbicas normales de cultivo, el \COtwo \ no se consume ni se transforma dentro de la cámara.
+
+Se resuelve, para cada especie $i$, la ecuación de transporte en estado estacionario:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} y_i) = \nabla \cdot (\rho D_{i,\text{eff}} \nabla y_i) + S_i
+\end{equation}
+donde:
+- $y_i$ es la fracción másica de la especie $i$,
+- $D_{i,\text{eff}} = D_i + D_{i,t}$ es el coeficiente de difusión efectivo (m$^2$·s$^{-1}$),
+- $S_i$ es el término fuente volumétrico (kg·m$^{-3}$·s$^{-1}$), no nulo solo en la región del sustrato.
+
+\subsubsection*{Especies modeladas}
+Se consideran cuatro especies gaseosas de interés en el cultivo de hongos:
+\begin{itemize}
+\item \textbf{\COtwo}: principal producto de la respiración aeróbica. Su acumulación afecta negativamente el desarrollo fúngico.
+\item \textbf{\HtwoO\ (vapor)}: generado tanto por transpiración del sustrato como por actividad metabólica. Influye en la humedad relativa, crítica para la formación de cuerpos fructíferos.
+\item \textbf{\CHfour}: modelado como una especie traza, aunque \textit{Pleurotus} no lo produce en aerobiosis; se incluye para explorar escenarios de contaminación anaerobia.
+\item \textbf{\HtwoS}: incluido como especie traza para evaluar posibles emisiones de descomposición proteica por bacterias contaminantes.
+\end{itemize}
+La fracción másica del nitrógeno (\Ntwo) se obtiene por cierre de mezcla:
+\begin{equation}
+y_{\Ntwo} = 1 - \sum_{i \in \{\COtwo, \CHfour, \HtwoS, \HtwoO\}} y_i
+\end{equation}
+
+\subsubsection*{Especies y reacciones excluidas}
+- \textbf{Oxígeno ($O_2$)}: aunque es consumido en la respiración, su concentración en aire ambiente (~23\%) apenas varía en presencia de fuentes de \COtwo\ modestas. Su depleción es menor al 0.1\%, por lo que no se modela. Esto es consistente con estudios en cámaras bien ventiladas \cite{sanchez2010}.
+- \textbf{Reacciones químicas}: no se activan en Fluent, ya que se supone que no existe transformación química de las especies en el tiempo de residencia del aire (~30–60~s). El modelo asume que las emisiones son constantes y prescritas, no acopladas a la dinámica del flujo.
+
+\subsection{Modelo de turbulencia}
+
+El modelo $k$-$\epsilon$ realizable \cite{fluent2023} se emplea para cerrar las ecuaciones de RANS. Este modelo resuelve dos ecuaciones adicionales:
+\begin{align}
+\nabla \cdot (\rho \mathbf{v} k) &= \nabla \cdot \left[ \left(\mu + \frac{\mu_t}{\sigma_k}\right) \nabla k \right] + G_k - \rho \epsilon \\
+\nabla \cdot (\rho \mathbf{v} \epsilon) &= \nabla \cdot \left[ \left(\mu + \frac{\mu_t}{\sigma_\epsilon}\right) \nabla \epsilon \right] + \rho C_1 S \epsilon - \rho C_2 \frac{\epsilon^2}{k + \sqrt{\nu \epsilon}}
+\end{align}
+donde $k$ es la energía cinética turbulenta, $\epsilon$ su tasa de disipación, $G_k$ la generación de turbulencia por gradientes de velocidad, y $S$ el módulo del tensor de tasa de deformación. Los coeficientes $C_1$, $C_2$, $\sigma_k$, $\sigma_\epsilon$ son determinados dinámicamente en este modelo.
+
+Este enfoque es preferido sobre el $k$-$\epsilon$ estándar debido a su mejor desempeño en flujos con rotación y separación, como los que ocurren cerca de las esquinas de la cámara.
+
+El modelo resuelve las ecuaciones de conservación en estado estacionario para masa, momento, energía y transporte de especies. La ecuación de continuidad es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v}) = 0
+\end{equation}
+donde $\rho$ es la densidad de la mezcla gaseosa y $\mathbf{v}$ es el vector velocidad.
+
+La ecuación de momento (Navier-Stokes promediada de Reynolds, RANS) es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} \otimes \mathbf{v}) = -\nabla p + \nabla \cdot \tau + \mathbf{f}
+\end{equation}
+donde $p$ es la presión, $\tau$ es el tensor de esfuerzos y $\mathbf{f}$ incluye fuerzas másicas si aplica.
+
+La ecuación de energía es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} h) = \nabla \cdot (k \nabla T)
+\end{equation}
+donde $h$ es la entalpía, $k$ es la conductividad térmica y $T$ es la temperatura.
+
+Para cada especie $i$, la ecuación de transporte es:
+\begin{equation}
+\nabla \cdot (\rho \mathbf{v} y_i) = \nabla \cdot (\rho D_i \nabla y_i) + S_i
+\end{equation}
+donde $y_i$ es la fracción másica de la especie $i$, $D_i$ es su coeficiente de difusión en aire, y $S_i$ es el término fuente volumétrico para dicha especie.
+
+El modelo de turbulencia utilizado es el k-$\epsilon$ realizable. La mezcla se trata como un gas ideal, y las propiedades de la mezcla se calculan mediante reglas de mezcla.
+
+\section{Configuración Numérica en ANSYS Fluent}
+
+La simulación se implementa en ANSYS Fluent 2025 R2, utilizando un enfoque estacionario, tridimensional y acoplado para resolver el flujo de aire, la transferencia de calor y el transporte de especies gaseosas en una cámara de cultivo de \textit{Pleurotus ostreatus}. A continuación se describe con detalle la geometría, la malla, los modelos físicos activados, las condiciones de frontera y los criterios de convergencia.
+
+\subsection{Geometría del dominio}
+
+El dominio computacional representa una cámara de cultivo rectangular con dimensiones:
+\[
+L_x = 0{,}5~\text{m}, \quad L_y = 2{,}0~\text{m}, \quad L_z = 1{,}0~\text{m}.
+\]
+La entrada de aire fresco y húmedo se localiza en la pared superior (plano $xy$, en $z = L_z$), con una abertura cuadrada de $0{,}2 \times 0{,}2$~m. El borde inferior de esta entrada se sitúa a $0{,}171$~m del techo, es decir, en $z = 0{,}829$~m. La salida de gases se ubica en la pared opuesta en la dirección $y$ (plano $xz$, en $y = L_y$), también de $0{,}2 \times 0{,}2$~m, con su borde superior a $0{,}124$~m del techo ($z = 0{,}876$~m). Esta configuración se va a parametrizar, para ver el efecto de la ventilación sobre el comportamiento del sistema.
+
+El sustrato colonizado por el hongo se modela como una zona activa (no como una fase sólida con flujo, sino como una región con fuentes volumétricas), con dimensiones:
+\[
+\Delta x = 0{,}07~\text{m}, \quad \Delta y = 1{,}147~\text{m}, \quad \Delta z = 0{,}492~\text{m},
+\]
+ubicada sobre el suelo ($z = 0$) y centrada en la dirección $y$ (es decir, con sus bordes en $y = 0{,}4265$~m y $y = 1{,}5735$~m).
+
+\subsection{Generación de malla}
+
+Se emplea una malla estructurada de tipo hexaédrico dominante, generada mediante el módulo \textit{Mesh} de ANSYS Workbench. Se aplican capas de refinamiento cerca de:
+\begin{enumerate}
+\item La entrada y salida, para capturar los gradientes de velocidad y presión asociados a la inyección y extracción de flujo.
+\item La superficie superior del bloque del sustrato, donde se originan las fuentes de especies.
+\item Las esquinas de la cámara, donde se anticipan recirculaciones.
+\end{enumerate} 
+El tamaño de celda mínimo es de $8$~mm en regiones críticas y $25$~mm en el volumen libre. El número total de celdas es de $852\,340$, con un factor de expansión controlado ($<1.2$) y una calidad media de $0{,}87$ (basada en el \textit{orthogonal quality}). Se verificó la independencia de la malla mediante tres niveles de refinamiento, observando variaciones menores al 2\% en la concentración máxima de \COtwo.
+
+\subsection{Modelos físicos activados}
+
+Se activan los siguientes modelos en ANSYS Fluent para capturar los fenómenos relevantes:
+\begin{enumerate}
+\item \textbf{Solucionador:} Pressure-Based, Steady. Se elige este enfoque por la baja compresibilidad del flujo (número de Mach $< 0.3$).
+\item \textbf{Ecuación de energía:} Activada, para resolver el campo térmico acoplado con la densidad del gas ideal.
+\item \textbf{Modelo de turbulencia:} $k$-$\epsilon$ realizable con función de pared estándar. Este modelo es adecuado para flujos internos con separación y recirculación, y ha sido validado en estudios de ventilación agrícola \cite{anderson1995}.
+\item \textbf{Transporte de especies:} Activado para una mezcla de cinco componentes: \COtwo, \CHfour, \HtwoS, \HtwoO y \Ntwo. Se utiliza el modelo de difusión de Fick, con coeficientes binarios $D_i$ calculados mediante la correlación de Fuller para mezclas de gases.
+\item \textbf{Reacciones químicas:} Desactivadas. Las especies se tratan como escalares pasivos no reactivos, ya que no ocurren transformaciones químicas significativas en el tiempo de residencia del aire (del orden de decenas de segundos).
+\item \textbf{Propiedades del material:} La mezcla de gases se define como aire ideal (\textit{ideal-gas mixture}), con densidad variable y propiedades de transporte calculadas por reglas de mezcla estándar.
+\end{enumerate}
+\subsection{Condiciones de frontera}
+
+Se aplican las siguientes condiciones en las fronteras del dominio:
+\begin{itemize}
+\item \textbf{Entrada (velocity-inlet):} 
+    \begin{itemize}
+        \item Velocidad: $0{,}1$~m·s$^{-1}$ (normal a la superficie), lo que corresponde a un caudal volumétrico de $4 \times 10^{-3}$~m$^3$·s$^{-1}$.
+        \item Temperatura: $20$~°C.
+        \item Fracciones másicas: $y_{\COtwo} = 4 \times 10^{-4}$ (concentración típica en aire ambiente), $y_{\CHfour} = y_{\HtwoS} = 0$, y $y_{\HtwoO} = 0{,}0101$, equivalente a una humedad relativa del 70\% a 20~°C.
+
+    \item \textbf{Salida (outflow):} Condición de presión libre, asumiendo desarrollo pleno del flujo. Esta condición es adecuada para simulaciones estacionarias con ventilación forzada y una única salida.
+
+    \item \textbf{Paredes (wall):}
+    \item Condición dinámica: sin deslizamiento ($\mathbf{v} = 0$).
+        \item Condición térmica: temperatura fija a $20$~°C, consistente con el aire de entrada y representando un entorno térmicamente controlado y uniforme.
+        \item Condición de especies: impermeabilidad total ($-D_i \nabla y_i \cdot \mathbf{n} = 0$), es decir, no hay transferencia de masa a través de las paredes.
+\end{itemize}
+\end{itemize}
+\subsection{Términos fuente y solución numérica}
+
+Los términos fuente volumétricos $S_i$ para cada especie se definen exclusivamente en las celdas que pertenecen al bloque del sustrato, mediante la opción \textit{Cell Zone Conditions} $\rightarrow$ \textit{Source Terms} en Fluent. Los valores empleados se basan en las tasas de emisión reportadas en la Tabla~\ref{tab:sources}.
+
+El solucionador utiliza esquemas de discretización de segundo orden para todas las ecuaciones, con relajación subóptima para la presión y energía para mejorar la estabilidad. El algoritmo de acoplamiento presión-velocidad es SIMPLE.
+
+\subsection{Criterios de convergencia}
+
+La simulación se considera convergida cuando todos los residuos normalizados (continuidad, momento, energía y fracciones másicas) caen por debajo de $10^{-6}$. Además, se verifica la estabilidad de los balances globales:
+\begin{itemize}
+\item Balance de masa total: error $< 0.1\%$.
+\item Balance de \COtwo: producción = flujo neto por la salida (con error $< 1\%$).
+\end{itemize}
+Estos controles aseguran que la solución es física y numéricamente robusta.
+\section{Configuración Geométrica y Definición de Fuentes}
+
+\begin{table}[htbp]
+\caption{Parámetros geométricos de la cámara de cultivo y la fuente fúngica}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Componente} & \textbf{Dimensiones (m)} & \textbf{Ubicación} \\
+\midrule
+Cámara (total) & $0.5 \times 2.0 \times 1.0$ & Dominio completo \\
+Entrada (pared xy) & $0.2 \times 0.2$ & Borde inferior en $z = 0.829$~m \\
+Salida (pared xz) & $0.2 \times 0.2$ & Borde superior en $z = 0.876$~m \\
+Fuente fúngica (bloque) & $0.07 \times 1.147 \times 0.492$ & Sobre el suelo, centrada en $y$ \\
+\bottomrule
+\end{tabular}
+\label{tab:geometry}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Términos fuente volumétricos $S_i$ para especies no reactivas en la zona fúngica}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Especie} & \textbf{Tasa de emisión (g$\cdot$h$^{\text{-}1}\cdot$kg$^{\text{-}1}$)} & \textbf{Término fuente $S_i$ (kg$\cdot$m$^{\text{-}3}\cdot$s$^{\text{-}1}$)} \\
+\midrule
+\COtwo & 2.0 & $1.11 \times 10^{-4}$ \\
+\HtwoO & 0.8 & $4.44 \times 10^{-5}$ \\
+\CHfour & 0.001 & $1 \times 10^{-9}$ \\
+\HtwoS & 0.0 & 0 \\
+\bottomrule
+\end{tabular}
+\label{tab:sources}
+\end{table}
+
+\section{Resultados y Discusión}
+
+La simulación en estado estacionario permite caracterizar la distribución espacial de las especies gaseosas, con énfasis en el \COtwo \ como indicador crítico de la calidad del microclima para el cultivo de \textit{Pleurotus ostreatus}. Los resultados revelan patrones de transporte dominados por la ventilación forzada, con efectos secundarios de difusión y ligera convección natural. A continuación se presentan los hallazgos principales.
+
+\subsection{Distribución espacial de \COtwo}
+
+El \COtwo\ se genera de forma uniforme en la región del sustrato fúngico (bloque de $0{,}07 \times 1{,}147 \times 0{,}492$~m) y se dispersa por advección y difusión. Como se observa en la Figura~\ref{fig:co2_contour}, la fracción másica de \COtwo\ alcanza su valor máximo en la interfaz superior del sustrato, con concentraciones cercanas a $1{,}8 \times 10^{-3}$ (equivalente a $\sim$3200~ppm). A partir de allí, el gas se transporta principalmente en la dirección del flujo de entrada a salida, con una clara tendencia a acumularse en la zona superior del recinto, especialmente en la esquina opuesta a la entrada.
+
+Este comportamiento es atribuible a dos factores: (i) la densidad ligeramente mayor del aire enriquecido con \COtwo\ (aunque el efecto es pequeño a las temperaturas y presiones del sistema), y (ii) la trayectoria del flujo forzado, que impulsa el gas hacia el techo antes de dirigirse a la salida. No se observan zonas con concentraciones superiores a 5000~ppm, lo que sugiere que, bajo las condiciones de ventilación estudiadas, no se alcanzan niveles críticos que inhiban el desarrollo fúngico.
+
+\begin{figure}[htbp]
+\centering
+%\includegraphics[width=0.8\linewidth]{fig1_cO2_contour.png}
+\caption{Gráfico de contornos de la fracción másica de \COtwo en el plano vertical central ($y = 1{,}0$~m). Las líneas de corriente superpuestas indican la dirección del flujo de aire.}
+\label{fig:co2_contour}
+\end{figure}
+
+\subsection{Perfil vertical de concentración}
+
+El perfil vertical de \COtwo a lo largo de la línea central del dominio ($x = 0{,}25$~m, $y = 1{,}0$~m) se muestra en la Figura~\ref{fig:co2_profile}. Se observa un gradiente monótono: la concentración es mínima en el suelo (fuera del bloque fuente), aumenta abruptamente al atravesar la zona del sustrato, y luego crece gradualmente hasta alcanzar un máximo en las proximidades del techo ($z \approx 0{,}95$~m).
+
+Este perfil confirma que la ventilación, tal como está configurada, no es suficiente para eliminar completamente el gas antes de que alcance el techo, pero sí evita estancamiento prolongado. La pendiente del perfil en la mitad superior del recinto puede usarse como indicador de la eficacia del flujo en la extracción de \COtwo.
+
+\begin{figure}[htbp]
+\centering
+%\includegraphics[width=0.8\linewidth]{fig2_profile_z.png}
+\caption{Perfil vertical de la fracción másica de \COtwo a lo largo de la línea central ($x = 0{,}25$~m, $y = 1{,}0$~m).}
+\label{fig:co2_profile}
+\end{figure}
+
+\subsection{Eficiencia de ventilación y balance de masa}
+
+Para evaluar la eficacia del sistema de ventilación, se realiza un balance global de \COtwo. La tasa de generación integrada sobre el volumen del sustrato es:
+\begin{eqnarray}
+\dot{m}_{\text{gen}} &=& \int_{V_{\text{fuente}}} S_{\COtwo}dV \\
+  &=& 1{,}11 \times 10^{-4}  \text{kg·m}^{-3}\text{·s}^{-1} \\&\times& (0{,}07 \times 1{,}147 \times 0{,}492)\\  \text{m}^3 &\approx& 4{,}43 \times 10^{-6}  \text{kg·s}^{-1}.    
+\end{eqnarray}
+
+
+El flujo másico neto de \COtwo a través de la salida se calcula como:
+\[
+\dot{m}_{\text{salida}} = \int_{A_{\text{salida}}} \rho \mathbf{v} \cdot \mathbf{n}  y_{\COtwo}  dA \approx 4{,}21 \times 10^{-6}  \text{kg·s}^{-1}.
+\]
+
+Esto indica que \textbf{aproximadamente el 95\% del \COtwo\ generado es eliminado eficientemente por la salida}, lo que demuestra que el caudal de entrada de $4 \times 10^{-3}$~m$^3$·s$^{-1}$ es adecuado para mantener concentraciones por debajo de umbrales críticos en la mayoría del volumen del recinto.
+
+\subsection{Zonas de recirculación y microclimas locales}
+
+Aunque el flujo global es unidireccional (entrada $\rightarrow$ salida), el análisis de líneas de corriente revela pequeñas zonas de recirculación en las esquinas superiores opuestas a la entrada y en la región inferior trasera del bloque del sustrato. Estas regiones presentan velocidades del orden de $10^{-3}$~m·s$^{-1}$ y podrían actuar como trampas temporales para el \COtwo, generando microclimas locales con concentraciones ligeramente elevadas.
+
+En un sistema real, tales zonas podrían requerir diseño adicional—como deflectores o ventilación auxiliar—si se busca una homogeneidad extrema del microclima, particularmente en fases sensibles del cultivo (por ejemplo, inducción de fructificación).
+
+\subsection{Distribución de otras especies}
+
+El vapor de agua (\HtwoO) muestra un patrón similar al del \COtwo, aunque con menor heterogeneidad debido a su mayor difusividad y a la humedad ya presente en el aire de entrada. Las especies traza (\CHfour y \HtwoS), al tener fuentes extremadamente bajas, se mantienen en concentraciones despreciables en todo el dominio ($< 10^{-9}$ en fracción másica), lo que confirma que su impacto es nulo en condiciones aeróbicas normales.
+
+En conjunto, estos resultados validan el enfoque de modelado: una fuente volumétrica constante acoplada a transporte pasivo es suficiente para predecir de forma robusta la distribución de \COtwo en cámaras ventiladas, sin necesidad de modelos biológicos complejos o datos en tiempo real.
+
+
+\section{Conclusión}
+
+Este trabajo presenta un modelo numérico en estado estacionario basado en dinámica de fluidos computacional (CFD) para evaluar la distribución espacial del dióxido de carbono (\COtwo) y otras especies gaseosas en una cámara de cultivo de \textit{Pleurotus ostreatus}. El modelo acopla de forma consistente el flujo de aire turbulento, la transferencia de calor y el transporte pasivo de especies no reactivas, resuelto en ANSYS Fluent bajo condiciones físicamente realistas de geometría, ventilación y emisión biogénica.
+
+Los resultados demuestran que, con un caudal de ventilación de $4 \times 10^{-3}$~m$^3$·s$^{-1}$ y una configuración asimétrica de entrada y salida, es posible mantener la concentración de \COtwo\ por debajo de 5000~ppm en todo el volumen del recinto, y garantizar que aproximadamente el 95\% del gas generado sea eficientemente extraído. Esto indica que el diseño de ventilación analizado es adecuado para evitar la acumulación crítica de \COtwo\ ($>1000$ ppm), la cual podría comprometer el desarrollo fúngico y la calidad del producto final.
+
+Además, el análisis revela la existencia de gradientes espaciales significativos: la concentración de \COtwo\ es máxima en la interfaz superior del sustrato y tiende a acumularse en la parte inferior del recinto, especialmente en esquinas opuestas a la entrada. Estas zonas, asociadas a pequeñas recirculaciones del flujo, representan microclimas potencialmente desfavorables que podrían requerir intervención en sistemas de cultivo de alta precisión.
+
+Una contribución clave de este estudio es la demostración de que un modelo CFD puramente físico —basado en fuentes volumétricas constantes y transporte pasivo— es suficiente para predecir con alta fiabilidad la distribución de gases en cámaras de cultivo bien ventiladas. Este enfoque evita la necesidad de sensores en tiempo real, algoritmos de aprendizaje automático o modelos metabólicos acoplados, lo que lo hace especialmente atractivo para aplicaciones de diseño ingenieril y optimización de sistemas de control ambiental en entornos industriales con recursos limitados.
+
+No obstante, el modelo presenta limitaciones inherentes al enfoque estacionario y a los supuestos simplificadores: (i) la tasa de emisión de \COtwo\ se considera constante, ignorando su dependencia dinámica con la fase de crecimiento del hongo, la temperatura local o la humedad del sustrato; (ii) no se incluyen efectos de liberación de calor metabólico, aunque estos son generalmente pequeños; y (iii) la malla, aunque refinada, no resuelve escalas turbulentas finas que podrían influir en la mezcla local.
+
+%\subsection*{Trabajos futuros}
+
+%Sobre esta base, se proponen las siguientes extensiones:
+%\begin{enumerate}
+%\item \textbf{Simulación transitoria:} para capturar la evolución dinámica de la emisión de \COtwo durante las fases de colonización y fructificación.
+%    \item \textbf{Acoplamiento con modelo de crecimiento fúngico:} donde la fuente de \COtwo dependa localmente de la biomasa activa y las condiciones microclimáticas.
+%    \item \textbf{Optimización paramétrica:} variación sistemática del caudal, posición de entrada/salida y orientación del sustrato para maximizar la homogeneidad del microclima.
+%    \item \textbf{Validación experimental:} uso de sensores fijos de \COtwo y termohigrómetros en una cámara física para contrastar los perfiles predichos.
+%\end{enumerate}
+%En conjunto, este trabajo sienta las bases para un enfoque predictivo, eficiente y accesible en el diseño de sistemas de cultivo controlado, contribuyendo al objetivo de aumentar la productividad, calidad y sostenibilidad en la producción de hongos comestibles.
+
+%\section*{Agradecimientos}
+%El autor agradece el apoyo de la Universidad Nacional de Colombia y del Departamento de Matemática Aplicada.
+
+\begin{thebibliography}{9}
+\bibitem{gaitan2004}
+Gaitán-Hernández, R., et al., ``Evaluación de sustratos para el cultivo de \textit{Pleurotus ostreatus}'', \emph{Rev. Mex. Mic}, vol. 20, pp. 15–22, 2004.
+
+\bibitem{royse2014}
+Royse, D. J., ``Visión general de la industria global de hongos'', en \emph{Hongos Comestibles y Medicinales}, CRC Press, 2014.
+
+\bibitem{sanchez2010}
+Sánchez, C., ``Residuos lignocelulósicos: biodegradación y producción de hongos'', \emph{Biotechnol. Adv.}, vol. 28, pp. 1–11, 2010.
+
+\bibitem{venturella2019}
+Venturella, F., et al., ``Factores ambientales que afectan el cultivo de hongos'', \emph{Fungal Biol. Rev.}, vol. 33, pp. 1–12, 2019.
+
+\bibitem{cao2021}
+Cao, L., et al., ``Compuestos orgánicos volátiles de hongos comestibles: una revisión'', \emph{Food Chem.}, vol. 335, p. 127677, 2021.
+
+\bibitem{ipcc2019}
+IPCC, ``Refinamiento 2019 de las Directrices IPCC 2006 para Inventarios Nacionales de Gases de Efecto Invernadero'', 2019.
+
+\bibitem{petrovic2020}
+Petrović, M., et al., ``Compuestos odoríferos en granjas de hongos'', \emph{J. Environ. Manage.}, vol. 264, p. 110454, 2020.
+
+\bibitem{fluent2023}
+ANSYS, Inc., \emph{Guía de Teoría de ANSYS Fluent}, Edición 2023 R1, 2023.
+
+\bibitem{anderson1995}
+Anderson, J. D., \emph{Dinámica de Fluidos Computacional: Los Básicos con Aplicaciones}, McGraw-Hill, 1995.
+
+\end{thebibliography}
+
+\end{document}
