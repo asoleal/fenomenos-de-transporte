@@ -1,0 +1,25 @@
+cat > .gitignore << 'EOF'
+# Archivos generados por LaTeX
+*.aux
+*.synctex.gz
+*.synctex
+*.fdb_latexmk
+*.fls
+*.log
+*.lof
+*.lot
+*.out
+*.toc
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+
+# NO ignorar pdfs (se mantienen en el repo)
+# *.pdf
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+EOF
