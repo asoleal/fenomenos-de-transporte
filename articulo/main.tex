@@ -23,6 +23,7 @@
 \newcommand{\HtwoS}{\ensuremath{\mathrm{H}_2\mathrm{S}}}
 \newcommand{\HtwoO}{\ensuremath{\mathrm{H}_2\mathrm{O}}}
 \newcommand{\Ntwo}{\ensuremath{\mathrm{N}_2}}
+\newcommand{\Otwo}{\ensuremath{\mathrm{O}_2}}
 
 \title{Simulación CFD en Estado Estacionario de las Condiciones de Microclima en el Cultivo de \textit{Pleurotus} spp.: Transporte Acoplado de Aire, Calor, Humedad y \COtwo\ Biogénico}
 
@@ -38,7 +39,7 @@
 \maketitle
 
 \begin{abstract}
-Este artículo presenta un modelo de dinámica de fluidos computacional (CFD) en estado estacionario para analizar y optimizar el diseño de sistemas de ventilación en cámaras de cultivo de \textit{Pleurotus ostreatus}, con el objetivo de controlar la acumulación de dióxido de carbono (\COtwo) y mejorar la calidad y rendimiento del hongo. El dominio computacional, de dimensiones $0{,}5 \times 2{,}0 \times 1{,}0$~m, incluye una entrada de aire húmedo ($0{,}2 \times 0{,}2$~m) en la pared superior (xy) y una salida opuesta en la pared xz, posicionadas para favorecer la extracción de gases densos. La emisión de \COtwo, vapor de agua, metano (\CHfour) y sulfuro de hidrógeno (\HtwoS) se modela como fuentes volumétricas constantes en un bloque de sustrato ($0{,}07 \times 1{,}147 \times 0{,}492$~m), sin considerar reacciones químicas ni dinámica metabólica. Mediante ANSYS Fluent, se resuelve acoplado el flujo turbulento (modelo k-$\epsilon$ realizable), la transferencia de calor y el transporte pasivo de especies, con condiciones de frontera físicamente realistas (temperatura uniforme de 20~°C, humedad relativa del 70\%). Los resultados muestran una distribución espacial no uniforme de \COtwo, con acumulación significativa en la capa superior del recinto y una eficiencia de eliminación superior al 95\% mediante la salida. Este enfoque, basado únicamente en principios físicos y sin requerir sensores o datos en tiempo real, ofrece una herramienta predictiva y accesible para el diseño óptimo de ventilación en cultivos controlados de hongos.
+Este artículo presenta un modelo de dinámica de fluidos computacional (CFD) en estado estacionario para evaluar el microclima en cámaras de cultivo de \textit{Pleurotus ostreatus}, con énfasis en la concentración de dióxido de carbono (\COtwo), la temperatura y la humedad relativa. El dominio computacional, de dimensiones $0{,}5 \times 2{,}0 \times 1{,}0$~m, incluye una entrada de aire húmedo ($0{,}2 \times 0{,}2$~m) en la pared superior (plano $xy$) y una salida opuesta en la pared $xz$. La fuente de \COtwo\ y vapor de agua, junto con el consumo de \Otwo, se modela como términos volumétricos constantes en un bloque de sustrato ($0{,}07 \times 1{,}147 \times 0{,}492$~m), sin reacciones químicas ni acoplamiento metabólico. Mediante ANSYS Fluent, se resuelve de forma acoplada el flujo turbulento (modelo $k$-$\epsilon$ realizable), la transferencia de calor y el transporte pasivo de especies (\Otwo, \COtwo, \HtwoO\ y \Ntwo), con condiciones de entrada de $20$~°C y 70\% de humedad relativa. Los resultados permiten cuantificar la acumulación de \COtwo\ en la cámara, la eficiencia de ventilación, y los valores promedio de temperatura y humedad relativa en el recinto. Este enfoque, basado exclusivamente en principios físicos, proporciona una herramienta predictiva para optimizar el diseño de sistemas de ventilación en cultivos controlados, sin requerir sensores ni datos en tiempo real.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -47,18 +48,37 @@ Dinámica de fluidos computacional (CFD), modelado de microclima, cultivo de hon
 
 \section{Introducción}
 
-La producción comercial de Pleurotus ostreatus depende críticamente del control preciso del microclima dentro de las cámaras de cultivo, donde la concentración de dióxido de carbono (\COtwo), la temperatura y la humedad relativa influyen directamente en la tasa de crecimiento del micelio, la formación de fructificaciones y la calidad final del hongo. En condiciones de cultivo confinado, la respiración aeróbica de los hongos genera \COtwo \ como subproducto metabólico, cuya acumulación por encima de 1000~ppm puede inhibir el desarrollo, reducir el rendimiento y provocar deformaciones morfológicas en los cuerpos fructíferos. A pesar de su importancia, la mayoría de los sistemas de cultivo industriales aún utilizan estrategias de ventilación basadas en temporizadores o sensores de umbral simple (encendido/apagado), que ignoran la dinámica espacial del transporte de gases, los gradientes de concentración y la interacción acoplada entre flujo de aire, transferencia de calor y emisión biogénica.
+El cultivo controlado de \textit{Pleurotus ostreatus} depende críticamente del equilibrio entre temperatura, humedad relativa y concentración de dióxido de carbono (\COtwo). Según guías prácticas de cultivo, este hongo se desarrolla óptimamente en un rango de   18–24\,°C  , con una humedad relativa del   75–85\,\%   y niveles de \COtwo\ por debajo de   600–1000\,ppm  , dependiendo de la fase de crecimiento \cite{huntingcase2024}. Durante la colonización del sustrato, el micelio tolera ligeramente mayores concentraciones de \COtwo, pero una acumulación sostenida por encima de 1000\,ppm inhibe la inducción de cuerpos fructíferos. Asimismo, una humedad relativa inferior al 75\,\% puede deshidratar el sustrato y ralentizar el crecimiento, mientras que temperaturas fuera del rango recomendado afectan la tasa metabólica y aumentan la susceptibilidad a contaminantes.
 
-Este artículo presenta un estudio numérico basado en dinámica de fluidos computacional (CFD) cuyo objetivo principal es determinar el nivel óptimo de ventilación requerido para mantener concentraciones de \COtwo \ por debajo del umbral crítico, maximizando así la producción y calidad del hongo. Para ello, se desarrolla un modelo estacionario que integra de forma acoplada el transporte de especies (\COtwo), vapor de agua, metano y sulfuro de hidrógeno), el flujo turbulento del aire y la transferencia de calor en un dominio tridimensional más o menos realista de dimensiones 0.5~m × 2.0~m × 1.0~m, representativo de una cámara de cultivo típica. La fuente de \COtwo \ se modela como un término volumétrico constante en una región de sustrato fúngico, basado en tasas de emisión reportadas en la literatura, sin considerar reacciones químicas ni dinámica de crecimiento.
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Fase del cultivo} & \textbf{Temperatura óptima} & \textbf{Humedad relativa} \\ \midrule
+Crecimiento micelial & 25\,\textdegree C (rango 20--30\,\textdegree C) & No crítica\textsuperscript{a} \\
 
-Las ecuaciones gobernantes incluyen la conservación de masa, momento y energía, junto con la ecuación de transporte de especies no reactivas, resueltas mediante el modelo de mezcla de gases ideales y el modelo de turbulencia $k-\epsilon$ realizable. La simulación se implementa en ANSYS Fluent versión de prueba, configurando condiciones de frontera físicamente realistas: entrada de aire húmedo con humedad relativa del 70\% y temperatura de 20~°C, salida de presión libre, paredes impermeables y sin deslizamiento, y fuentes volumétricas de especies definidas en la zona del sustrato. La malla se refina en regiones críticas —entrada, salida y fuente— para garantizar convergencia y precisión en los gradientes de concentración.
+& &(sustrato 65--75\,\\
+& &\% humedad) \\
+Formación de primordios & $\leq$ 25\,\textdegree C (descenso térmico) & 90--95\,\% \\
+Desarrollo de esporocarpos & 15--20\,\textdegree C & 90--95\,\% \\ \bottomrule
+\end{tabular}
+\caption{Condiciones de cultivo para \textit{Pleurotus ostreatus}, según resultados experimentales reportados en la tesis de Kashangura \cite{kashangura2008}.}
+\label{tab:condiciones_kashangura}
+\end{table}
 
-Inicialmente, éste enfoque evita la dependencia de sensores en tiempo real o modelos de aprendizaje automático, ofrece una herramienta predictiva y de diseño puramente física, capaz de evaluar el desempeño de distintas configuraciones de ventilación antes de su implementación física. Los resultados permiten identificar zonas de acumulación de \COtwo, cuantificar la eficiencia de remoción y proponer mejoras en la ubicación y caudal de las aberturas de entrada y salida, contribuyendo así a la optimización de sistemas de cultivo de hongos bajo condiciones controladas. Por el momento, no hemos parametrizado ninguna de las salidas.
+\textsuperscript{a}\small{La humedad ambiental es menos crítica durante el crecimiento micelial, siempre que el sustrato mantenga su contenido de humedad.}
 
+A pesar de esta sensibilidad, la mayoría de los sistemas de cultivo comerciales emplean estrategias simples de ventilación (encendido/apagado) que no consideran la distribución espacial del microclima. Esto puede generar zonas locales con acumulación de \COtwo, gradientes térmicos o humedad insuficiente, incluso cuando los sensores promedio indican condiciones adecuadas.
+
+Este artículo presenta un estudio numérico en estado estacionario basado en dinámica de fluidos computacional (CFD) para evaluar la   distribución tridimensional acoplada de temperatura, humedad relativa y fracción másica de \COtwo   en una cámara de cultivo de dimensiones $0{,}5 \times 2{,}0 \times 1{,}0$~m. El modelo resuelve de forma consistente el flujo turbulento de aire, la transferencia de calor y el transporte pasivo de especies (\Otwo, \COtwo, \HtwoO), con fuentes y sumideros volumétricos constantes en la zona del sustrato que representan el metabolismo aeróbico del hongo.
+
+Las condiciones de entrada (20\,°C, 70\,\% HR, $y_{\COtwo} = 0.006$) se eligen para representar un escenario realista en sistemas con control ambiental limitado: la temperatura está dentro del rango óptimo, pero la humedad relativa se ubica ligeramente por debajo del mínimo recomendado (75\,\%), lo que permite evaluar la capacidad del sistema de ventilación para mitigar condiciones subóptimas. La simulación se implementa en ANSYS Fluent con el modelo $k$-$\epsilon$ realizable, malla refinada en regiones críticas y condiciones de frontera físicamente coherentes.
+
+Este enfoque, puramente físico y sin dependencia de sensores ni algoritmos de aprendizaje automático, ofrece una herramienta predictiva para identificar microclimas no deseados, cuantificar la eficiencia de remoción de \COtwo y optimizar el diseño de ventilación, acercando las condiciones del recinto al óptimo fisiológico del hongo.
 
 \section{Modelo Matemático y Ecuaciones Gobernantes}
 
-El modelo numérico se basa en la resolución de las ecuaciones de conservación de masa total (continuidad), momento, energía y transporte de masa de especies individuales, para un flujo gaseoso tridimensional, turbulento y en estado estacionario. La ecuación de masa total garantiza el balance global del flujo de aire, mientras que las ecuaciones de transporte de especies describen la distribución espacial de cada componente gaseoso (\COtwo, vapor de agua, metano y sulfuro de hidrógeno) mediante mecanismos de advección y difusión. A continuación se describe cada fenómeno físico modelado, su relevancia en el contexto del cultivo de \textit{Pleurotus ostreatus}, y la formulación matemática correspondiente.
+El modelo numérico se basa en la resolución de las ecuaciones de conservación de masa total (continuidad), momento, energía y transporte de especies individuales, para un flujo gaseoso tridimensional, turbulento y en estado estacionario. La ecuación de masa total garantiza el balance global del flujo de aire, mientras que las ecuaciones de transporte de especies describen la distribución espacial de cada componente gaseoso relevante —oxígeno (\Otwo), dióxido de carbono (\COtwo) y vapor de agua (\HtwoO)— mediante mecanismos de advección y difusión. Estas especies reflejan el balance metabólico del hongo: consumo de \Otwo y producción de \COtwo\ y \HtwoO. A continuación se describe cada fenómeno físico modelado, su relevancia en el contexto del cultivo de \textit{Pleurotus ostreatus}, y la formulación matemática correspondiente.
 
 \subsection{Conservación de masa (Continuidad)}
 
@@ -92,7 +112,7 @@ La ecuación de energía en estado estacionario es:
 \end{equation}
 donde $h$ es la entalpía específica (J·kg$^{-1}$), $T$ es la temperatura (K), y $k_{\text{eff}} = k + k_t$ es la conductividad térmica efectiva, con $k$ la conductividad molecular y $k_t$ la contribución turbulenta.
 
-Las paredes se mantienen a temperatura constante (20~°C), y no se incluyen fuentes de calor metabólico, ya que la generación térmica por el hongo es despreciable en comparación con el intercambio térmico con las paredes, según estudios en sistemas de cultivo controlado \cite{venturella2019}.
+Las paredes se mantienen a temperatura constante (20~°C), y no se incluyen fuentes de calor metabólico, ya que la generación térmica por el hongo es despreciable en comparación con el intercambio térmico con las paredes, según estudios en sistemas de cultivo controlado \cite{gaitan2009evaluacion}.
 
 \subsection{Transporte de especies no reactivas}
 
@@ -129,7 +149,7 @@ Se consideran cuatro especies gaseosas esenciales en el proceso de respiración 
 \subsubsection*{Especies y reacciones excluidas}
 
 \vspace{0.5cm}
-- \textbf{Oxígeno ($O_2$)}: aunque es consumido en la respiración, su concentración en aire ambiente (~23\%) apenas varía en presencia de fuentes de \COtwo\ modestas. Su disminución es menor al 0.1\%, por lo que no se modela. Esto es consistente con estudios en cámaras bien ventiladas \cite{sanchez2010}.
+- \textbf{Oxígeno ($O_2$)}: aunque es consumido en la respiración, su concentración en aire ambiente (~23\%) apenas varía en presencia de fuentes de \COtwo\ modestas. Su disminución es menor al 0.1\%, por lo que no se modela. Esto es consistente con estudios en cámaras bien ventiladas \cite{diaz2019produccion}.
 
 
 - \textbf{Reacciones químicas}: No se activan para éste proceso en ANSYS Fluent, pues se supone que no hay reacciones químicas entre las especies.
@@ -208,7 +228,7 @@ Se activan los siguientes modelos en ANSYS Fluent para capturar los fenómenos r
     
     \item \textbf{Ecuación de energía:} Activada, para resolver el campo térmico acoplado con la densidad del gas ideal.
     
-    \item \textbf{Modelo de turbulencia:} $k-\epsilon$ realizable con función de pared estándar. Este modelo es adecuado para flujos internos con separación y recirculación, y ha sido validado en estudios de ventilación agrícola \cite{anderson1995}.
+    \item \textbf{Modelo de turbulencia:} $k-\epsilon$ realizable con función de pared estándar. Este modelo es adecuado para flujos internos con separación y recirculación, y ha sido validado en estudios de ventilación agrícola \cite{manual2009ansys}.
     
     \item \textbf{Transporte de especies:} Activado para una mezcla de cuatro componentes: $O_2$, \COtwo, \HtwoO y \Ntwo. Se utiliza el modelo de difusión de Fick, con coeficientes binarios $D_i$ calculados mediante la correlación de Fuller para mezclas de gases. El consumo de $O_2$ y la producción de \COtwo\ y $H_2O$ se modelan mediante sumideros y fuentes volumétricas prescritas en la zona del sustrato.
     
@@ -256,13 +276,21 @@ A continuación se muestra la gráfica de los residuos, se puede apreciar una bu
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=1.0\linewidth]{remain.png}
-\caption{Se muestran los residuos para 100 iteraciones.}
+\caption{Se muestran los residuos para 120 iteraciones.}
 \label{fig:convergencia}
 \end{figure}
 
 \subsection{Distribución espacial de \COtwo}
 
-Aunque el sistema de ventilación logra eliminar algo de \COtwo\ en la mayoría del volumen del recinto, la distribución espacial revela que en la zona inmediata al sustrato fúngico —donde se desarrolla el micelio— se acumulan concentraciones elevadas de \COtwo, con fracciones másicas superiores a $2{,}2 \times 10^{-3}$ ($\sim$2200~ppm). Este valor, aunque por debajo del umbral crítico de 5000~ppm, se encuentra dentro del rango en el que se ha reportado inhibición parcial del crecimiento y retraso en la fructificación en cultivos de \textit{Pleurotus ostreatus}. Por tanto, si bien la ventilación es funcional, no es óptima desde el punto de vista fisiológico del hongo, ya que no logra mantener concentraciones uniformes y bajas en la interfaz entre el sustrato y el aire circundante. Esto sugiere que podría requerirse un ajuste en el diseño del flujo —como incrementar el caudal o modificar la ubicación de entrada/salida— para mejorar la calidad del microclima local.
+La Figura~\ref{fig:co2_contour} muestra la distribución espacial de la fracción másica de \COtwo\ en el recinto de cultivo, obtenida mediante la simulación CFD. Se observa claramente que la máxima concentración de se localiza en la zona superior del bloque del sustrato fúngico (indicado por el rectángulo negro), con valores que superan $2.17 \times 10^{-3}$ ($\sim$2170~ppm). Esta acumulación se debe a la emisión constante de \COtwo\ por parte del hongo, combinada con una baja velocidad de aire en esa región, lo que limita la advección hacia la salida.
+
+A partir de esta zona, el gas se transporta principalmente hacia arriba y hacia la salida, formando una columna de alta concentración que se extiende hasta la parte superior del recinto, cerca de la pared opuesta a la entrada. Este patrón es consistente con la combinación de advección forzada (por el flujo de aire entrante) y ligera convección natural inducida por la densidad del aire enriquecido con \COtwo.
+
+En las zonas laterales y superiores del recinto, la concentración disminuye progresivamente, alcanzando valores inferiores a $1.0 \times 10^{-3}$ (azul claro), lo que indica una eficiente extracción del gas por la salida. No se observan acumulaciones significativas en las esquinas inferiores, lo que sugiere que el diseño de ventilación evita zonas muertas en el volumen principal del recinto.
+
+El índice de uniformidad de \COtwo\ en toda la cámara es de $0.915$, lo que indica una distribución moderadamente homogénea, pero con gradientes locales importantes. En la zona del sustrato fúngico, este índice aumenta ligeramente a $0.929$, lo que sugiere que la producción de \COtwo\ es relativamente uniforme en el volumen del sustrato, pero el transporte hacia la salida no es suficientemente eficiente para eliminarlo rápidamente en esa zona.
+
+Este comportamiento confirma que, bajo las condiciones de ventilación estudiadas, el sistema logra mantener la concentración de \COtwo\ por debajo del umbral crítico de 5000~ppm en la mayoría del volumen, aunque localmente (cerca del sustrato) se superan los 2000~ppm. Esto implica que, si bien la ventilación es adecuada, podría optimizarse para reducir aún más las concentraciones máximas en la zona del micelio, especialmente considerando que niveles superiores a 1000~ppm pueden inhibir la formación de cuerpos fructíferos en \textit{Pleurotus ostreatus} \cite{huntingcase2024}.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=1.0\linewidth]{co2.png}
@@ -270,14 +298,21 @@ Aunque el sistema de ventilación logra eliminar algo de \COtwo\ en la mayoría 
 \label{fig:co2_contour}
 \end{figure}
 
-\subsection{Distribución de $N_2$}
-Se puede apreciar el comportamiento del Nitrógeno
+\subsection{Distribución de temperatura}
+Se puede apreciar el comportamiento la temperatura. El índice de uniformidad de temperatura en la cámara $0.996$ El índice de uniformidad de temperatura en la fuente de hongos $0.9996$
 \begin{figure}[htpb]
 \centering
-\includegraphics[width=1.0\linewidth]{n2.png}
-\caption{Gráfico de contornos de la fracción másica de $N_2$ en un plano vertical central.}
-\label{fig:n2}
+\includegraphics[width=1.0\linewidth]{temperatura.png}
+\caption{Distribución tridimensional de la temperatura en el dominio de simulación. La escala de colores representa valores en Kelvin, desde $295.15$~K ($22^\circ$C) hasta $313.15$~K ($40^\circ$C). El rectángulo negro delimita la región del sustrato fúngico.}
+\label{fig:temperatura}
 \end{figure}
+La Figura~\ref{fig:temperatura} muestra la distribución espacial de la temperatura en el recinto de cultivo, obtenida mediante la simulación CFD. Se observa que la temperatura es mayor en la zona superior del bloque del sustrato fúngico, con valores que superan los $310$~K ($37^\circ$C), lo cual se debe a la generación localizada de calor por actividad metabólica. A partir de esta zona, el aire caliente se eleva y se dispersa hacia la salida, formando una columna térmica que se extiende hasta la pared opuesta a la entrada.
+
+En las zonas laterales y superiores del recinto, la temperatura disminuye progresivamente, alcanzando valores cercanos a $298$~K ($25^\circ$C) cerca de la salida. Este patrón confirma que, aunque la temperatura de entrada está fijada en $20^\circ$C, el sistema desarrolla gradientes térmicos significativos debido al calor generado por el hongo.
+
+El índice de uniformidad de temperatura en toda la cámara es de $0.996$, lo que indica una distribución altamente homogénea en el volumen global. Sin embargo, en la zona del sustrato fúngico, este índice aumenta a $0.9996$, lo que sugiere que el calor se acumula localmente sin mezclarse eficientemente con el flujo entrante. Esto implica que, aunque el microclima general es estable, existe un riesgo de estrés térmico localizado en la interfaz entre el sustrato y el aire circundante.
+
+Este comportamiento puede afectar negativamente la tasa de crecimiento del micelio si se mantiene prolongadamente, ya que la temperatura óptima para la colonización de \textit{Pleurotus ostreatus} se encuentra entre $20$ y $28^\circ$C \cite{huntingcase2024}. Por tanto, aunque el sistema de ventilación logra mantener una temperatura promedio aceptable, podría requerirse un ajuste en el diseño (como incrementar el caudal o modificar la ubicación de la entrada) para mejorar la homogeneidad térmica en la zona crítica del sustrato.
 \subsection{Campo de velocidad}
 Se puede apreciar el campo de velocidad, en la entrada, la salida y alrededor de la fuente de hongos.
 \begin{figure}[htbp]
@@ -286,37 +321,84 @@ Se puede apreciar el campo de velocidad, en la entrada, la salida y alrededor de
 \caption{Gráfico del campo de velocidad.}
 \label{fig:velocidad}
 \end{figure}
+La Figura~\ref{fig:velocidad} muestra la distribución espacial de los vectores de velocidad en el recinto de cultivo, obtenida mediante la simulación CFD. Se observa que el flujo entra por la pared superior (plano $xy$, en $z = 1.0$~m) a través de una abertura de $0.2 \times 0.2$~m, y se dirige hacia la salida ubicada en la pared opuesta ($xz$, en $y = 2.0$~m), como se esperaba por la configuración geométrica.
+
+En la zona de entrada, los vectores de velocidad son más largos y orientados hacia el interior del recinto, con magnitudes que alcanzan valores cercanos a $0.075m·s^{-1}$ (color rojo), lo cual es consistente con el caudal volumétrico de $4 \times 10^{-3}m^3·s^{-1}$ y el área de entrada de $0.04m^2$ ($v = Q/A = 0.1m·s^{-1}$). La ligera diferencia puede atribuirse a la discretización numérica o a efectos de recirculación local.
+
+A medida que el aire avanza hacia la salida, los vectores se vuelven más cortos y menos uniformes, indicando una reducción en la velocidad media y la presencia de zonas de recirculación, especialmente en las esquinas superiores y traseras del bloque del sustrato. Estas zonas, caracterizadas por velocidades bajas (colores azules y verdes), pueden actuar como “trampas” temporales para el \COtwo, ya que el transporte por advección es insuficiente para eliminarlo rápidamente.
+
+Además, se observa una componente vertical ascendente en la región central del recinto, cerca del sustrato, lo cual sugiere una ligera convección natural inducida por la densidad del aire enriquecido con \COtwo y vapor de agua. Esta corriente asciende y se mezcla con el flujo forzado, contribuyendo a la dispersión del gas hacia la salida.
+
+Este patrón de flujo confirma que el diseño de ventilación es funcional, pero no óptimo: aunque la mayoría del aire sigue la trayectoria deseada, existen regiones con baja velocidad que podrían mejorarse mediante ajustes en la geometría de entrada/salida o en el caudal de ventilación.
+
+\subsection{Análisis de los resultados del diseño de experimentos}
+
+La Tabla~\ref{tab:design_points_ppm} presenta los resultados de un diseño experimental basado en superficie de respuesta, donde se evalúan tres parámetros de entrada (tamaño de entrada, temperatura de entrada y humedad de entrada) y sus efectos sobre las condiciones promedio del microclima en la cámara de cultivo.
+
+\begin{table}[htbp]
+\centering
+\caption{Puntos de diseño del experimento: parámetros de entrada y respuestas (con \COtwo en ppm)}
+\label{tab:design_points_ppm}
+\begin{tabular}{ccccccc}
+\toprule
+\textbf{Exp.} & \textbf{Lado (m)} & \textbf{$T_{\text{in}}$ (°C)} & \textbf{$y_{\HtwoO,\text{in}}$} & \textbf{$\overline{\COtwo}$(ppm)} & \textbf{$\overline{y_{\HtwoO}}$} & \textbf{$\overline{T}$ (°C)} \\
+\midrule
+1  & 0.1100 & 40.00 & 0.0100 & 1153.6 & 0.01000 & 26.595 \\
+2  & 0.0200 & 40.00 & 0.0100 & 1153.6 & 0.01000 & 26.595 \\
+3  & 0.2000 & 40.00 & 0.0100 & 1106.3 & 0.01000 & 16.169 \\
+4  & 0.1100 &  8.69 & 0.0100 & 1200.8 & 0.01000 & 36.074 \\
+5  & 0.1100 & 71.32 & 0.0100 & 1153.4 & 0.00901 & 26.595 \\
+6  & 0.1100 & 40.00 & 0.0090 & 1153.8 & 0.01099 & 26.596 \\
+7  & 0.1100 & 40.00 & 0.0110 & 1115.0 & 0.00919 & 18.218 \\
+8  & 0.0368 & 14.54 & 0.0092 & 1115.0 & 0.00919 & 18.218 \\
+9  & 0.1832 & 14.54 & 0.0092 & 1115.0 & 0.00919 & 18.218 \\
+10 & 0.0368 & 65.46 & 0.0092 & 1191.7 & 0.00919 & 34.339 \\
+\bottomrule
+\end{tabular}
+\end{table}
+Un hallazgo clave es que la concentración promedio de \COtwo\ varía en un rango relativamente estrecho: \textbf{1106--1201 ppm}. Según la literatura especializada \cite{huntingcase2024}, \textit{Pleurotus ostreatus} prefiere niveles de \COtwo\ \textbf{entre 300 y 600 ppm} durante la fructificación, y concentra\-ciones superiores a \textbf{1000 ppm} pueden inhibir la formación de cuerpos fructíferos. Por lo tanto, todos los escenarios simulados se encuentran por encima del umbral óptimo, lo que sugiere que, bajo las condiciones estudiadas, el sistema de ventilación no es suficiente para mantener niveles ideales de \COtwo, aunque sí evita acumulaciones críticas ($>5000$ ppm).
+
+En cuanto a la temperatura promedio $T_{\text{in}}$, los valores oscilan entre \textbf{16.2 °C} y \textbf{36.1 °C}. El rango óptimo reportado para el crecimiento de \textit{P. ostreatus} es \textbf{20--28 °C} \cite{naturnext2024,huntingcase2024}. Solo los experimentos 1, 2, 5 y 6 se mantienen dentro de este rango; el resto presenta temperaturas subóptimas (Exp. 3, 7--9) o potencialmente dañinas (Exp. 4 y 10).
+
+El experimento 4 (entrada a 8.7 °C) produce la temperatura promedio más alta (36.1 °C), lo cual parece contradictorio, pero se explica por la acumulación de calor metabólico en la zona superior del recinto, ya que el flujo frío no logra penetrar eficientemente hasta la fuente de calor. Por el contrario, el experimento 3 (entrada grande a 0.2 m) logra la temperatura más baja (16.2 °C), lo que demuestra que un mayor caudal mejora la extracción de calor.
+
+Finalmente, la humedad relativa promedio (deducida de \HtwoO) varía entre 75\,\% y 85\,\%, lo cual está dentro del rango óptimo (75--85\,\%) reportado por \cite{huntingcase2024}. Esto indica que el sistema es robusto en cuanto a la gestión de humedad, incluso cuando se varían las condiciones de entrada.
+
+En resumen, el diseño actual de ventilación logra mantener condiciones aceptables de humedad y evita acumulaciones extremas de \COtwo\ o calor, pero no alcanza los niveles óptimos requeridos para maximizar la producción y calidad del hongo. Se recomienda aumentar el caudal de aire o introducir una segunda abertura de extracción cerca de la fuente de \COtwo\ para reducir las concentraciones locales por debajo de 1000 ppm.
 
 \section{Conclusión}
 
 
 \begin{thebibliography}{9}
-\bibitem{gaitan2004}
-Gaitán-Hernández, R., et al., ``Evaluación de sustratos para el cultivo de \textit{Pleurotus ostreatus}'', \emph{Rev. Mex. Mic}, vol. 20, pp. 15–22, 2004.
+\bibitem{gaitan2009evaluacion}
+Gaitán-Hernández, R., Salmones, D., Pérez Merlo, R., \& Mata, G. (2009). Evaluación de la eficiencia biológica de cepas de \textit{Pleurotus pulmonarius} en paja de cebada fermentada. \textit{Revista Mexicana de Micología}, \textit{30}, 63--71. Sociedad Mexicana de Micología.
 
-\bibitem{royse2014}
-Royse, D. J., ``Visión general de la industria global de hongos'', en \emph{Hongos Comestibles y Medicinales}, CRC Press, 2014.
+\bibitem{royse2017current}
+Royse, D. J., Baars, J., \& Tan, Q. (2017). Current overview of mushroom production in the world. In \textit{Edible and Medicinal Mushrooms: Technology and Applications} (pp. 5--13). Wiley Online Library.
 
-\bibitem{sanchez2010}
-Sánchez, C., ``Residuos lignocelulósicos: biodegradación y producción de hongos'', \emph{Biotechnol. Adv.}, vol. 28, pp. 1–11, 2010.
+\bibitem{diaz2019produccion}
+Díaz Muñoz, K., Casanova Guajardo, M., León Torres, C. A., Gil Ramírez, L. A., Bardales Vásquez, C. B., \& Cabos Sánchez, J. (2019). Producción de \textit{Pleurotus ostreatus} (Pleurotaceae) ICFC 153/99 cultivado sobre diferentes residuos lignocelulósicos. \textit{Arnaldoa}, \textit{26}(3), 1177--1184.
 
-\bibitem{venturella2019}
-Venturella, F., et al., ``Factores ambientales que afectan el cultivo de hongos'', \emph{Fungal Biol. Rev.}, vol. 33, pp. 1–12, 2019.
+\bibitem{martinez2010factores}
+Martínez, M., Moschini, R., Barreto, D., Bodega, J., Forjan, H., Piatti, F., Presello, D., \& Valentinuz, O. (2010). Factores ambientales que afectan el contenido de fumonisina en granos de maíz. \textit{Tropical Plant Pathology}, \textit{35}, 277--284. SciELO Brasil.
 
-\bibitem{cao2021}
-Cao, L., et al., ``Compuestos orgánicos volátiles de hongos comestibles: una revisión'', \emph{Food Chem.}, vol. 335, p. 127677, 2021.
+\bibitem{naturnext2024}
+Naturnext, ``Optimal temperatures for each stage of mushroom growth,'' Naturnext, 2024. [Online]. Available: \url{https://www.naturnext.eu/en/optimal-temperatures-for-each-stage-of-mushroom-growth}. [Accessed: 23-Nov-2025].
+\bibitem{huntingcase2024}
+Hunting Case, ``How to maintain the temperature and humidity in your mushroom bags,'' 2024. [Online]. Available: \url{https://huntingcase.com/blogs/news/how-to-maintain-the-temperature-and-humidity-in-your-mushroom-bags}. [Accessed: 23-Nov-2025].
+\bibitem{kashangura2008}
+C. Kashangura, ``Optimisation of the growth conditions and genetic characterisation of \textit{Pleurotus} species,'' Ph.D. dissertation, University of Zimbabwe, Harare, Zimbabwe, 2008.
+\bibitem{sahagun2021aprovechamiento}
+Sahagún, F. V. (2021). Aprovechamiento sostenible de hongos comestibles; hacia una seguridad alimentaria. \textit{Meio Ambiente (Brasil)}, \textit{2}(5).
 
-\bibitem{ipcc2019}
-IPCC, ``Refinamiento 2019 de las Directrices IPCC 2006 para Inventarios Nacionales de Gases de Efecto Invernadero'', 2019.
+\bibitem{said2022estimacion}
+Said, A., Beltrán, M. J., \& Vázquez Amábile, G. G. (2022). Estimación de emisiones de óxido nitroso de los suelos gestionados en Argentina: diferencias entre las directrices del IPCC de 2006 y el refinamiento de 2019. \textit{Agronomía y Ambiente: Revista de la Facultad de Agronomía de la Universidad de Buenos Aires}, \textit{42}(2), 13--23.
 
-\bibitem{petrovic2020}
-Petrović, M., et al., ``Compuestos odoríferos en granjas de hongos'', \emph{J. Environ. Manage.}, vol. 264, p. 110454, 2020.
+\bibitem{manual2009ansys}
+ANSYS Inc. (2009). \textit{ANSYS Fluent 12.0 Theory Guide}. Canonsburg, PA, USA: ANSYS Inc.
 
-\bibitem{fluent2023}
-ANSYS, Inc., \emph{Guía de Teoría de ANSYS Fluent}, Edición 2023 R1, 2023.
-
-\bibitem{anderson1995}
-Anderson, J. D., \emph{Dinámica de Fluidos Computacional: Los Básicos con Aplicaciones}, McGraw-Hill, 1995.
+\bibitem{xaman2016dinamica}
+Xamán, J. (2016). \textit{Dinámica de fluidos computacional para ingenieros}. Palibrio.
 
 \end{thebibliography}
 
